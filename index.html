@@ -251,6 +251,204 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/09/Cronet%E5%BA%93-iOS%E3%80%81Android%E7%BC%96%E8%AF%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ibabyblue">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/assets/blogImg/icon.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ibabyblue's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/04/09/Cronet%E5%BA%93-iOS%E3%80%81Android%E7%BC%96%E8%AF%91/" itemprop="url">Cronet库编译</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-04-09T20:22:42+08:00">
+                2020-04-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index">
+                    <span itemprop="name">网络编程</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Cronet为Chrome开源项目Chromium的网络模块，此网络库支持HTTP，HTTPS，SPDY，QUIC，HTTP2.0 等协议。<br>编译Cronet库需要先获取Chromium项目，编译过程比较繁琐，而且Chromium项目比较大，总计19.5GB，google项目需要vpn。</p>
+<h3 id="Chromium项目的获取"><a href="#Chromium项目的获取" class="headerlink" title="Chromium项目的获取"></a>Chromium项目的获取</h3><ul>
+<li><p><strong>1.1首先需要获取depot_tools</strong></p>
+<p>  此工具在后续编译的时候会用到，安装步骤：</p>
+<ul>
+<li>1.1.1 克隆至本地(文件路径自定义)<br>git clone <a href="https://chromium.googlesource.com/chromium/tools/depot_tools.git" target="_blank" rel="noopener">https://chromium.googlesource.com/chromium/tools/depot_tools.git</a></li>
+<li>1.1.2 添加路径至.bash_profile(xxx为depot_tools克隆的文件路径)<br>export PATH=”$PATH:xxx/depot_tools”<br>注意：此处的xxx路径不能使用“ ~/ ”,否则会报错，“ ~ ”字符串冲突。</li>
+</ul>
+</li>
+<li><p><strong>1.2获取Chromium项目</strong></p>
+<p>  步骤如下：</p>
+<ul>
+<li>1.2.1 创建文件夹 chromium<br>  mkdir chromium &amp;&amp; cd chromium</li>
+<li>1.2.2 获取项目 （fetch 即为depot_tools中工具）<br>  fetch —nohooks ios<br>这里使用—nohooks是因为不要在获取完项目后直接进行其他依赖更新，一步一步来（当然出现问题解决完 也可以使用gclient sync继续获取）</li>
+<li>1.2.3 同步更新<br>  进入src文件夹执行更新命令<br>  gclient sync</li>
+</ul>
+</li>
+</ul>
+<h6 id="1-2-2获取项目过程中存在的问题点如下："><a href="#1-2-2获取项目过程中存在的问题点如下：" class="headerlink" title="1.2.2获取项目过程中存在的问题点如下："></a>1.2.2获取项目过程中存在的问题点如下：</h6><ul>
+<li><p>1.Git error: </p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">RPC failed; curl 56 LibreSSL SSL_read: SSL_ERROR_SYSCALL, errno 54</span><br><span class="line">fatal: the remote end hung up unexpectedly</span><br><span class="line">fatal: early EOF</span><br><span class="line">fatal: index-pack failed</span><br></pre></td></tr></table></figure>
+
+<p>  原因:Git pull or push过大文件造成的错误<br>  解决方法：<br>  修改git配置项（500MB取值可变）<br>  git config –global http.postBuffer 524288000</p>
+</li>
+<li><p>2.Git error: </p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fatal: the remote end hung up unexpectedly xxx</span><br><span class="line">fatal: early EOF</span><br><span class="line">fatal: index-pack failed</span><br></pre></td></tr></table></figure>
+
+<p>  原因:存在大文件需要压缩，需要配置压缩项<br>  解决方法：（ompression取值范围：-1~9，可参见：<a href="https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-config.html）" target="_blank" rel="noopener">https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-config.html）</a><br>  git config –global –add core.compression -1</p>
+</li>
+</ul>
+<h6 id="1-2-3同步时存在的问题点："><a href="#1-2-3同步时存在的问题点：" class="headerlink" title="1.2.3同步时存在的问题点："></a>1.2.3同步时存在的问题点：</h6><ul>
+<li><p>1.ssl验证错误<br>  Python2.7.9 之后，当使用urllib.urlopen打开一个 https 链接时，会验证一次 SSL 证书。而当目标网站使用的是自签名的证书时就会抛出如下异常<br>  &lt;urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:777)&gt;</p>
+<p>  解决方法：<br>  全局取消证书验证</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import ssl</span><br><span class="line">ssl._create_default_https_context &#x3D; ssl._create_unverified_context</span><br></pre></td></tr></table></figure>
+
+<p>  文件名如下：</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vpython src&#x2F;third_party&#x2F;depot_tools&#x2F;download_from_google_storage.py</span><br><span class="line">vpython src&#x2F;third_party&#x2F;depot_tools&#x2F;gsutil.py</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<ul>
+<li><p><strong>1.3构建Cronet</strong></p>
+<ul>
+<li><p>1.3.1链接cr_cronet.py脚本文件<br>此时所在文件位置为：xxx/chromium/src<br>ln -s ./components/cronet/tools/cr_cronet.py xxx/chromium/src</p>
+</li>
+<li><p>1.3.2构建环境<br>cr_cronet.py gn 即创建默认的构建环境（默认是模拟器的Debug版本）<br>这里构建真机发布版本：<br>cr_cronet.py gn -i -r<br>此时在out/目录下会生成Release-iphoneos文件夹<br>ninjia -C out/Release-iphoneos cronet_package</p>
+<p>编译完成后<br>在out/Release-iphoneos目录下生成framework文件<br>Cronet.framework            — 4.7MB<br>在out/Release-iphoneos/Static目录下生成静态framework文件<br>Cronet.framework            — 24.2MB<br>在out/Release-iphoneos/obj/components/cronet/ios目录下生成三个.a文件<br>libcronet.a                 — 24.1MB<br>libcronet_static.a             — 1.4MB<br>libcronet_deps_complete.a    — 249MB</p>
+<p>Android 库：<br>out/Release-iphoneos/lib.java/components/cronet/android/ 所有 jar 包在此目录下，一般不用；<br>out/Release-iphoneos/cronet/ 需要使用cronet库的java API的so、jar包；<br>out/Release-iphoneos/libcronet.77.0.3825.0.so，strip 后的库，6M；<br>out/Release-iphoneos/lib.unstripped，未 strip 的库在此目录下，50.9M;<br>out/Release-iphoneos/gen/components/cronet/android/cronet_jni_registration.h，该文件便是自动生成的JNI头文件</p>
+<p>以上脚本默认架构为arm64 如果需要其他架构，需要修改cr_cronet.py脚本cpu对应的参数<br>直接修改脚本文件方式欠妥，执行命令动态修改cpu参数即可：<br>在创建构建环境后，执行命令<br>gn args <out_dir> </p>
+<p>使用：<br>gn args out/Release-iphoneos<br>在弹出来的文件编辑器里边修改target_cpu参数即可，参数可能取值（使用命令gn help target_cpu查看）：<br>“arm”，“arm64”，“x86”，“x64”，“mipsel”<br>目前想要支持多架构，只能手动合成多架构版本。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>关于log：<br>开启CronetLog模块：<br>[Cronet startNetLogToFile:[self currentNetLogFileName] logBytes:NO];<br>[Cronet stopNetLog];<br>因为Log是json格式，需要主动结束以保证其完整性。<br>可以使用 <a href="https://netlog-viewer.appspot.com/#import" target="_blank" rel="noopener">https://netlog-viewer.appspot.com/#import</a> 分析Log，也可以使用Chrome扩展程序 Chromium NetLog dump viewer</p>
+<h6 id="参考链接："><a href="#参考链接：" class="headerlink" title="参考链接："></a>参考链接：</h6><p><a href="https://chromium.googlesource.com/chromium/src/+/master/components/cronet/ios/docs/BUILD.md" target="_blank" rel="noopener">https://chromium.googlesource.com/chromium/src/+/master/components/cronet/ios/docs/BUILD.md</a><br><a href="https://chromium.googlesource.com/chromium/src/+/master/components/cronet/build_instructions.md" target="_blank" rel="noopener">https://chromium.googlesource.com/chromium/src/+/master/components/cronet/build_instructions.md</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/26/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E9%9F%B3%E9%A2%91%E7%A1%AC%E7%BC%96%E7%A0%81-AudioToolbox-PCMToAAC/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1195,7 +1393,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1206,7 +1404,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-count">3</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -1217,7 +1415,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
