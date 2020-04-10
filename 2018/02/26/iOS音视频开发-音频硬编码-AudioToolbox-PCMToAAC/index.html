@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="音视频," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="之前几篇文章记录了视频的软、硬编码过程，接下来将记录下音频的软、硬编码过程，学习、工作之余，以免忘记。视频编码地址：iOS音视频开发-视频会话捕捉iOS音视频开发-视频硬编码(H264)iOS音视频开发-视频软编码(x264编码H.264文件)iOS音视频开发-视频软编码(FFmpeg+x264编码H.264文件) PCM数据PCM(Pulse Code Modulation)也被称为脉冲编码调制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS音视频开发-音频硬编码-AudioToolbox-PCMToAAC">
+<meta property="og:url" content="http://yoursite.com/2018/02/26/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E9%9F%B3%E9%A2%91%E7%A1%AC%E7%BC%96%E7%A0%81-AudioToolbox-PCMToAAC/index.html">
+<meta property="og:site_name" content="ibabyblue&#39;s Blog">
+<meta property="og:description" content="之前几篇文章记录了视频的软、硬编码过程，接下来将记录下音频的软、硬编码过程，学习、工作之余，以免忘记。视频编码地址：iOS音视频开发-视频会话捕捉iOS音视频开发-视频硬编码(H264)iOS音视频开发-视频软编码(x264编码H.264文件)iOS音视频开发-视频软编码(FFmpeg+x264编码H.264文件) PCM数据PCM(Pulse Code Modulation)也被称为脉冲编码调制">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2018-02-26T07:11:40.000Z">
+<meta property="article:modified_time" content="2020-04-10T07:18:29.155Z">
+<meta property="article:author" content="ibabyblue">
+<meta property="article:tag" content="音视频">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'ibabyblue'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/02/26/iOS音视频开发-音频硬编码-AudioToolbox-PCMToAAC/"/>
+
+
+
+
+
+  <title>iOS音视频开发-音频硬编码-AudioToolbox-PCMToAAC | ibabyblue's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ibabyblue's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向 身之所往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/26/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E9%9F%B3%E9%A2%91%E7%A1%AC%E7%BC%96%E7%A0%81-AudioToolbox-PCMToAAC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ibabyblue">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/assets/blogImg/icon.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ibabyblue's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS音视频开发-音频硬编码-AudioToolbox-PCMToAAC</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-02-26T15:11:40+08:00">
+                2018-02-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index">
+                    <span itemprop="name">iOS音视频技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>之前几篇文章记录了视频的软、硬编码过程，接下来将记录下音频的软、硬编码过程，学习、工作之余，以免忘记。<br>视频编码地址：<br><a href="https://www.jianshu.com/p/06a34f14b017" target="_blank" rel="noopener">iOS音视频开发-视频会话捕捉</a><br><a href="https://www.jianshu.com/p/15d14dc19053" target="_blank" rel="noopener">iOS音视频开发-视频硬编码(H264)</a><br><a href="https://www.jianshu.com/p/b4aacf16274e" target="_blank" rel="noopener">iOS音视频开发-视频软编码(x264编码H.264文件)</a><br><a href="https://www.jianshu.com/p/31d1ca4999c6" target="_blank" rel="noopener">iOS音视频开发-视频软编码(FFmpeg+x264编码H.264文件)</a></p>
+<p>PCM数据<br>PCM(Pulse Code Modulation)也被称为脉冲编码调制。PCM音频数据是未经压缩的音频采样数据裸流，它是由模拟信号经过采样、量化、编码转换成的标准的数字音频数据。<br>移动端对音频的实时采集编码传输，一般为将采集的音频数据设置为PCM格式数据，然后将PCM编码为AAC格式数据，以便后续传输。<br>PCM的数据格式，这里有篇文章介绍的很好，后续代码中的采样率、声道等均参考此文章设置。<br>PCM数据格式文章地址：<a href="https://blog.csdn.net/ownwell/article/details/8114121/" target="_blank" rel="noopener">点这里</a></p>
+<p>ADTS<br>ADTS全称是(Audio Data Transport Stream)，是AAC的一种十分常见的传输格式。<br>将PCM数据编码为AAC的时候需要将每帧的AAC数据添加ADTS header，否则将无法解码播放。<br>ADTS数据格式分为两部分：<br>固定头部：adts_fixed_header<br>可变头部：adts_variable_header<br>详见Wiki，地址在文章末尾。</p>
+<p>主要代码<br>1、音频捕获代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br></pre></td><td class="code"><pre><span class="line">#import &quot;BBAudioCapture.h&quot;</span><br><span class="line">#import &lt;AVFoundation&#x2F;AVFoundation.h&gt;</span><br><span class="line">#import &quot;BBAudioConfig.h&quot;</span><br><span class="line">#import &quot;BBAudioHardEncoder.h&quot;</span><br><span class="line">#import &quot;BBAudioHardEncoder.h&quot;</span><br><span class="line"></span><br><span class="line">@interface BBAudioCapture ()</span><br><span class="line">&#123;</span><br><span class="line">    AudioComponentInstance _outInstance;</span><br><span class="line">&#125;</span><br><span class="line">@property (nonatomic, assign) AudioComponent        component;</span><br><span class="line">@property (nonatomic, strong) AVAudioSession        *session;</span><br><span class="line">@property (nonatomic, strong) BBAudioHardEncoder    *encoder;</span><br><span class="line">@property (nonatomic, strong) NSFileHandle          *handle;</span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">@implementation BBAudioCapture</span><br><span class="line"></span><br><span class="line">#pragma mark -- 对象销毁方法</span><br><span class="line">- (void)dealloc&#123;</span><br><span class="line">    AudioComponentInstanceDispose(_outInstance);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#pragma mark -- 对外API（控制是否捕捉音频数据）</span><br><span class="line">- (void)startRunning&#123;</span><br><span class="line">    AudioOutputUnitStart(_outInstance);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">-(void)stopRunning&#123;</span><br><span class="line">    AudioOutputUnitStop(_outInstance);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#pragma mark -- 对外API（设置捕获音频数据配置项）</span><br><span class="line">- (void)setConfig:(BBAudioConfig *)config&#123;</span><br><span class="line">    _config &#x3D; config;</span><br><span class="line">    [self private_setupAudioSession];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#pragma mark -- 私有API（初始化音频会话）</span><br><span class="line">- (void)private_setupAudioSession&#123;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;0.初始化编码器</span><br><span class="line">    self.encoder &#x3D; [[BBAudioHardEncoder alloc] init];</span><br><span class="line">    self.encoder.config &#x3D; self.config;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;1.获取音频会话实例</span><br><span class="line">    self.session &#x3D; [AVAudioSession sharedInstance];</span><br><span class="line"></span><br><span class="line">    NSError *error &#x3D; nil;</span><br><span class="line">    [self.session setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionDefaultToSpeaker error:&amp;error];</span><br><span class="line"></span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;AVAudioSession setupError&quot;);</span><br><span class="line">        error &#x3D; nil;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;2.激活会话</span><br><span class="line">    [self.session setActive:YES error:&amp;error];</span><br><span class="line"></span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;AVAudioSession setActiveError&quot;);</span><br><span class="line">        error &#x3D; nil;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;3.设置模式</span><br><span class="line">    [self.session setMode:AVAudioSessionModeVideoRecording error:&amp;error];</span><br><span class="line"></span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;AVAudioSession setModeError&quot;);</span><br><span class="line">        error &#x3D; nil;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;4.设置音频单元</span><br><span class="line">    AudioComponentDescription acd &#x3D; &#123;</span><br><span class="line">        .componentType &#x3D; kAudioUnitType_Output,</span><br><span class="line">        .componentSubType &#x3D; kAudioUnitSubType_RemoteIO,</span><br><span class="line">        .componentManufacturer &#x3D; kAudioUnitManufacturer_Apple,</span><br><span class="line">        .componentFlags &#x3D; 0,</span><br><span class="line">        .componentFlagsMask &#x3D; 0,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;5.查找音频单元</span><br><span class="line">    self.component &#x3D; AudioComponentFindNext(NULL, &amp;acd);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;6.获取音频单元实例</span><br><span class="line">    OSStatus status &#x3D; AudioComponentInstanceNew(self.component, &amp;_outInstance);</span><br><span class="line"></span><br><span class="line">    if (status !&#x3D; noErr) &#123;</span><br><span class="line">        NSLog(@&quot;AudioSource new AudioComponent error&quot;);</span><br><span class="line">        status &#x3D; noErr;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;7.设置音频单元属性--&gt;可读写 0--&gt;不可读写 1--&gt;可读写</span><br><span class="line">    UInt32 flagOne &#x3D; 1;</span><br><span class="line">    AudioUnitSetProperty(_outInstance, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &amp;flagOne, sizeof(flagOne));</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;8.设置音频单元属性--&gt;音频流</span><br><span class="line">    AudioStreamBasicDescription asbd &#x3D; &#123;0&#125;;</span><br><span class="line">    asbd.mSampleRate &#x3D; self.config.sampleRate;&#x2F;&#x2F;采样率</span><br><span class="line">    asbd.mFormatID &#x3D; kAudioFormatLinearPCM;&#x2F;&#x2F;原始数据为PCM格式</span><br><span class="line">    asbd.mFormatFlags &#x3D; kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;</span><br><span class="line">    asbd.mChannelsPerFrame &#x3D; (UInt32)self.config.channels;&#x2F;&#x2F;每帧的声道数量</span><br><span class="line">    asbd.mFramesPerPacket &#x3D; 1;&#x2F;&#x2F;每个数据包多少帧</span><br><span class="line">    asbd.mBitsPerChannel &#x3D; 16;&#x2F;&#x2F;16位</span><br><span class="line">    asbd.mBytesPerFrame &#x3D; asbd.mChannelsPerFrame * asbd.mBitsPerChannel &#x2F; 8;&#x2F;&#x2F;每帧多少字节 bytes -&gt; bit &#x2F; 8</span><br><span class="line">    asbd.mBytesPerPacket &#x3D; asbd.mFramesPerPacket * asbd.mBytesPerFrame;&#x2F;&#x2F;每个包多少字节</span><br><span class="line"></span><br><span class="line">    status &#x3D; AudioUnitSetProperty(_outInstance, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &amp;asbd, sizeof(asbd));</span><br><span class="line"></span><br><span class="line">    if (status !&#x3D; noErr) &#123;</span><br><span class="line">        NSLog(@&quot;AudioUnitSetProperty StreamFormat error&quot;);</span><br><span class="line">        status &#x3D; noErr;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;9.设置回调函数</span><br><span class="line">    AURenderCallbackStruct cb;</span><br><span class="line">    cb.inputProcRefCon &#x3D; (__bridge void *)self;</span><br><span class="line">    cb.inputProc &#x3D; audioBufferCallBack;</span><br><span class="line"></span><br><span class="line">    status &#x3D; AudioUnitSetProperty(_outInstance, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, 1, &amp;cb, sizeof(cb));</span><br><span class="line"></span><br><span class="line">    if(status !&#x3D; noErr)&#123;</span><br><span class="line">        NSLog(@&quot;AudioUnitSetProperty StreamFormat InputCallback error&quot;);</span><br><span class="line">        status &#x3D; noErr;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;10.初始化音频单元</span><br><span class="line">    status &#x3D; AudioUnitInitialize(_outInstance);</span><br><span class="line"></span><br><span class="line">    if (status !&#x3D; noErr) &#123;</span><br><span class="line">        NSLog(@&quot;AudioUnitInitialize error&quot;);</span><br><span class="line">        status &#x3D; noErr;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;11.设置优先采样率</span><br><span class="line">    [self.session setPreferredSampleRate:self.config.sampleRate error:&amp;error];</span><br><span class="line"></span><br><span class="line">    if (error) &#123;</span><br><span class="line">        NSLog(@&quot;AudioSource setPreferredSampleRate error&quot;);</span><br><span class="line">        error &#x3D; nil;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;12.aac文件夹地址</span><br><span class="line">    NSString *audioPath &#x3D; [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@&quot;test.aac&quot;];</span><br><span class="line">    [[NSFileManager defaultManager] removeItemAtPath:audioPath error:nil];</span><br><span class="line">    [[NSFileManager defaultManager] createFileAtPath:audioPath contents:nil attributes:nil];</span><br><span class="line">    self.handle &#x3D; [NSFileHandle fileHandleForWritingAtPath:audioPath];</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#pragma mark -- 音频流回调函数</span><br><span class="line">static OSStatus audioBufferCallBack(void *inRefCon,</span><br><span class="line">AudioUnitRenderActionFlags *ioActionFlags,</span><br><span class="line">const AudioTimeStamp *inTimeStamp,</span><br><span class="line">UInt32 inBusNumber,</span><br><span class="line">UInt32 inNumberFrames,</span><br><span class="line">AudioBufferList *ioData) &#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        BBAudioCapture *capture &#x3D; (__bridge BBAudioCapture *)inRefCon;</span><br><span class="line">        if(!capture) return -1;</span><br><span class="line"></span><br><span class="line">        AudioBuffer buffer;</span><br><span class="line">        buffer.mData &#x3D; NULL;</span><br><span class="line">        buffer.mDataByteSize &#x3D; 0;</span><br><span class="line">        buffer.mNumberChannels &#x3D; 1;</span><br><span class="line"></span><br><span class="line">        AudioBufferList buffers;</span><br><span class="line">        buffers.mNumberBuffers &#x3D; 1;</span><br><span class="line">        buffers.mBuffers[0] &#x3D; buffer;</span><br><span class="line"></span><br><span class="line">        OSStatus status &#x3D; AudioUnitRender(capture-&gt;_outInstance,</span><br><span class="line">        ioActionFlags,</span><br><span class="line">        inTimeStamp,</span><br><span class="line">        inBusNumber,</span><br><span class="line">        inNumberFrames,</span><br><span class="line">        &amp;buffers);</span><br><span class="line"></span><br><span class="line">        if(status &#x3D;&#x3D; noErr) &#123;</span><br><span class="line">            [capture.encoder encodeWithBufferList:buffers completianBlock:^(NSData *encodedData, NSError *error) &#123;</span><br><span class="line">                if (error) &#123;</span><br><span class="line">                    NSLog(@&quot;error:%@&quot;,error);</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            NSLog(@&quot;write to file!&quot;);</span><br><span class="line">            [capture.handle writeData:encodedData];</span><br><span class="line">            &#125;];</span><br><span class="line">        &#125;</span><br><span class="line">        return status;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>2、编码代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br></pre></td><td class="code"><pre><span class="line">#import &quot;BBAudioHardEncoder.h&quot;</span><br><span class="line">#import &quot;BBAudioConfig.h&quot;</span><br><span class="line"></span><br><span class="line">@interface BBAudioHardEncoder ()</span><br><span class="line">@property (nonatomic, assign) AudioConverterRef converterRef;</span><br><span class="line">@end</span><br><span class="line">@implementation BBAudioHardEncoder</span><br><span class="line"></span><br><span class="line">- (AudioConverterRef)converterRef&#123;</span><br><span class="line">    if (_converterRef &#x3D;&#x3D; nil) &#123;</span><br><span class="line">        [self private_setupAudioConvert];</span><br><span class="line">    &#125;</span><br><span class="line">    return _converterRef;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)dealloc &#123;</span><br><span class="line">    AudioConverterDispose(_converterRef);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)private_setupAudioConvert&#123;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;1.输入流</span><br><span class="line">    AudioStreamBasicDescription inputFormat &#x3D; &#123;0&#125;;</span><br><span class="line">    inputFormat.mSampleRate &#x3D; self.config.sampleRate;&#x2F;&#x2F;采样率</span><br><span class="line">    inputFormat.mFormatID &#x3D; kAudioFormatLinearPCM;&#x2F;&#x2F;PCM采样</span><br><span class="line">    inputFormat.mFormatFlags &#x3D; kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;</span><br><span class="line">    inputFormat.mChannelsPerFrame &#x3D; (UInt32)self.config.channels;&#x2F;&#x2F;每帧声道数</span><br><span class="line">    inputFormat.mFramesPerPacket &#x3D; 1;&#x2F;&#x2F;每包帧数</span><br><span class="line">    inputFormat.mBitsPerChannel &#x3D; 16;&#x2F;&#x2F;每声道位数</span><br><span class="line">    inputFormat.mBytesPerFrame &#x3D; inputFormat.mBitsPerChannel &#x2F; 8 * inputFormat.mChannelsPerFrame;&#x2F;&#x2F;每帧的字节数</span><br><span class="line">    inputFormat.mBytesPerPacket &#x3D; inputFormat.mBytesPerFrame * inputFormat.mFramesPerPacket;&#x2F;&#x2F;每包字节数</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;2.输出流</span><br><span class="line">    AudioStreamBasicDescription outputFormat;</span><br><span class="line">    &#x2F;&#x2F;2.1初始清零</span><br><span class="line">    memset(&amp;outputFormat, 0, sizeof(outputFormat));</span><br><span class="line">    &#x2F;&#x2F;2.2音频流，在正常播放情况下的帧率。如果是压缩的格式，这个属性表示解压缩后的帧率。帧率不能为0。</span><br><span class="line">    outputFormat.mSampleRate       &#x3D; inputFormat.mSampleRate;</span><br><span class="line">    &#x2F;&#x2F;2.3AAC编码 kAudioFormatMPEG4AAC kAudioFormatMPEG4AAC_HE_V2</span><br><span class="line">    outputFormat.mFormatID         &#x3D; kAudioFormatMPEG4AAC;</span><br><span class="line">    &#x2F;&#x2F;2.4无损编码，0则无</span><br><span class="line">    outputFormat.mFormatFlags      &#x3D; kMPEG4Object_AAC_LC;</span><br><span class="line">    &#x2F;&#x2F;2.5每一个packet的音频数据大小。如果的动态大小设置为0。动态大小的格式需要用AudioStreamPacketDescription来确定每个packet的大小。</span><br><span class="line">    outputFormat.mBytesPerPacket   &#x3D; 0;</span><br><span class="line">    &#x2F;&#x2F;2.6每帧的声道数</span><br><span class="line">    outputFormat.mChannelsPerFrame &#x3D; (UInt32)self.config.channels;</span><br><span class="line">    &#x2F;&#x2F;2.7每个packet的帧数。如果是未压缩的音频数据，值是1。动态帧率格式，这个值是一个较大的固定数字，比如说AAC的1024。如果是动态大小帧数（比如Ogg格式）设置为0。</span><br><span class="line">    outputFormat.mFramesPerPacket  &#x3D; 1024;</span><br><span class="line">    &#x2F;&#x2F;2.8每帧的bytes数，每帧的大小。每一帧的起始点到下一帧的起始点。如果是压缩格式，设置为0 。</span><br><span class="line">    outputFormat.mBytesPerFrame &#x3D; 0;</span><br><span class="line">    &#x2F;&#x2F;2.9语音每采样点占用位数 压缩格式设置为0</span><br><span class="line">    outputFormat.mBitsPerChannel &#x3D; 0;</span><br><span class="line">    &#x2F;&#x2F;2.10字节对齐，填0.</span><br><span class="line">    outputFormat.mReserved &#x3D; 0;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;3.编码器参数</span><br><span class="line">    const OSType subtype &#x3D; kAudioFormatMPEG4AAC;</span><br><span class="line">    AudioClassDescription requestedCodecs[2] &#x3D; &#123;</span><br><span class="line">        &#123;</span><br><span class="line">            kAudioEncoderComponentType,</span><br><span class="line">            subtype,</span><br><span class="line">            kAppleSoftwareAudioCodecManufacturer</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            kAudioEncoderComponentType,</span><br><span class="line">            subtype,</span><br><span class="line">            kAppleHardwareAudioCodecManufacturer</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;4.编码器</span><br><span class="line">    OSStatus result &#x3D; AudioConverterNewSpecific(&amp;inputFormat, &amp;outputFormat, 2, requestedCodecs, &amp;_converterRef);</span><br><span class="line"></span><br><span class="line">    if (result &#x3D;&#x3D; noErr) &#123;</span><br><span class="line">        NSLog(@&quot;creat convert success!&quot;);</span><br><span class="line">    &#125;else&#123;</span><br><span class="line">        NSLog(@&quot;creat convert error!&quot;);</span><br><span class="line">        _converterRef &#x3D; nil;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)encodeWithBufferList:(AudioBufferList)bufferList completianBlock:(void (^)(NSData *encodedData, NSError *error))completionBlock&#123;</span><br><span class="line">    if (!self.converterRef) &#123;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    int size &#x3D; bufferList.mBuffers[0].mDataByteSize;</span><br><span class="line"></span><br><span class="line">    if (size &lt;&#x3D; 0) &#123;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    char *aacBuf &#x3D; malloc(size);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;1.初始化一个输出缓冲列表</span><br><span class="line">    AudioBufferList outBufferList;</span><br><span class="line">    outBufferList.mNumberBuffers              &#x3D; 1;</span><br><span class="line">    outBufferList.mBuffers[0].mNumberChannels &#x3D; bufferList.mBuffers[0].mNumberChannels;</span><br><span class="line">    outBufferList.mBuffers[0].mDataByteSize   &#x3D; bufferList.mBuffers[0].mDataByteSize; &#x2F;&#x2F; 设置缓冲区大小</span><br><span class="line">    outBufferList.mBuffers[0].mData           &#x3D; aacBuf; &#x2F;&#x2F; 设置AAC缓冲区</span><br><span class="line">    UInt32 outputDataPacketSize               &#x3D; 1;</span><br><span class="line"></span><br><span class="line">    NSData *data &#x3D; nil;</span><br><span class="line">    NSError *error &#x3D; nil;</span><br><span class="line">    OSStatus status &#x3D; AudioConverterFillComplexBuffer(_converterRef, inputDataProc, &amp;bufferList, &amp;outputDataPacketSize, &amp;outBufferList, NULL);</span><br><span class="line">    if (status &#x3D;&#x3D; 0)&#123;</span><br><span class="line">        NSData *rawAAC &#x3D; [NSData dataWithBytes:outBufferList.mBuffers[0].mData length:outBufferList.mBuffers[0].mDataByteSize];</span><br><span class="line">        NSData *adtsHeader &#x3D; [self getADTSDataWithPacketLength:rawAAC.length];</span><br><span class="line">        NSMutableData *fullData &#x3D; [NSMutableData dataWithData:adtsHeader];</span><br><span class="line">        [fullData appendData:rawAAC];</span><br><span class="line">        data &#x3D; fullData;</span><br><span class="line">    &#125;else&#123;</span><br><span class="line">        error &#x3D; [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];</span><br><span class="line">        NSLog(@&quot;音频编码失败&quot;);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (completionBlock) &#123;</span><br><span class="line">        dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        completionBlock(data, error);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    free(aacBuf);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#pragma mark -- AudioCallBack</span><br><span class="line">OSStatus inputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData) &#123;</span><br><span class="line">    &#x2F;&#x2F;填充PCM到缓冲区</span><br><span class="line">    AudioBufferList bufferList &#x3D; *(AudioBufferList*)inUserData;</span><br><span class="line">    ioData-&gt;mBuffers[0].mNumberChannels &#x3D; 1;</span><br><span class="line">    ioData-&gt;mBuffers[0].mData           &#x3D; bufferList.mBuffers[0].mData;</span><br><span class="line">    ioData-&gt;mBuffers[0].mDataByteSize   &#x3D; bufferList.mBuffers[0].mDataByteSize;</span><br><span class="line">    ioData-&gt;mNumberBuffers              &#x3D; 1;</span><br><span class="line">    return noErr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;**</span><br><span class="line">*  Add ADTS header at the beginning of each and every AAC packet.</span><br><span class="line">*  This is needed as MediaCodec encoder generates a packet of raw</span><br><span class="line">*  AAC data.</span><br><span class="line">*</span><br><span class="line">*  Note the packetLen must count in the ADTS header itself.</span><br><span class="line">*  See: http:&#x2F;&#x2F;wiki.multimedia.cx&#x2F;index.php?title&#x3D;ADTS</span><br><span class="line">*  Also: http:&#x2F;&#x2F;wiki.multimedia.cx&#x2F;index.php?title&#x3D;MPEG-4_Audio#Channel_Configurations</span><br><span class="line">**&#x2F;</span><br><span class="line">- (NSData *)getADTSDataWithPacketLength:(NSInteger)packetLength &#123;</span><br><span class="line"></span><br><span class="line">    int adtsLength &#x3D; 7;</span><br><span class="line">    char *packet &#x3D; malloc(sizeof(char) * adtsLength);</span><br><span class="line">    &#x2F;&#x2F; Variables Recycled by addADTStoPacket</span><br><span class="line">    int profile &#x3D; 2;  &#x2F;&#x2F;AAC LC</span><br><span class="line">    &#x2F;&#x2F;39&#x3D;MediaCodecInfo.CodecProfileLevel.AACObjectELD;</span><br><span class="line">    int freqIdx &#x3D; 4;  &#x2F;&#x2F;44.1KHz</span><br><span class="line">    int chanCfg &#x3D; 1;  &#x2F;&#x2F;MPEG-4 Audio Channel Configuration. 1 Channel front-center</span><br><span class="line">    NSUInteger fullLength &#x3D; adtsLength + packetLength;</span><br><span class="line">    &#x2F;&#x2F; fill in ADTS data</span><br><span class="line">    packet[0] &#x3D; (char)0xFF; &#x2F;&#x2F; 11111111     &#x3D; syncword</span><br><span class="line">    packet[1] &#x3D; (char)0xF9; &#x2F;&#x2F; 1111 1 00 1  &#x3D; syncword MPEG-2 Layer CRC</span><br><span class="line">    packet[2] &#x3D; (char)(((profile-1)&lt;&lt;6) + (freqIdx&lt;&lt;2) +(chanCfg&gt;&gt;2));</span><br><span class="line">    packet[3] &#x3D; (char)(((chanCfg&amp;3)&lt;&lt;6) + (fullLength&gt;&gt;11));</span><br><span class="line">    packet[4] &#x3D; (char)((fullLength&amp;0x7FF) &gt;&gt; 3);</span><br><span class="line">    packet[5] &#x3D; (char)(((fullLength&amp;7)&lt;&lt;5) + 0x1F);</span><br><span class="line">    packet[6] &#x3D; (char)0xFC;</span><br><span class="line">    NSData *data &#x3D; [NSData dataWithBytesNoCopy:packet length:adtsLength freeWhenDone:YES];</span><br><span class="line">    return data;</span><br><span class="line">&#125;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>以上代码为主要代码，配置代码无非就是采样率：44.1kHz，声道：双声道。<br>完整代码地址：<a href="https://github.com/ibabyblue/PCMHardEncodeToAAC" target="_blank" rel="noopener">https://github.com/ibabyblue/PCMHardEncodeToAAC</a><br>将编码的AAC数据写入本地文件，利用VLC播放器可以直接播放.aac格式文件，测试很方便。</p>
+<p>写在最后，一路学习，坎坷良多，非常感谢无私分享的开发者们，感谢Jovins、iossigner分享的干货，感恩！<br>参考地址：<br><a href="http://blog.csdn.net/ownwell/article/details/8114121/" target="_blank" rel="noopener">http://blog.csdn.net/ownwell/article/details/8114121/</a><br><a href="https://wiki.multimedia.cx/index.php?title=ADTS" target="_blank" rel="noopener">https://wiki.multimedia.cx/index.php?title=ADTS</a><br><a href="https://developer.apple.com/documentation/audiotoolbox/audio_converter_services?language=objc" target="_blank" rel="noopener">https://developer.apple.com/documentation/audiotoolbox/audio_converter_services?language=objc</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E9%9F%B3%E8%A7%86%E9%A2%91/" rel="tag"># 音视频</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/02/22/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E8%BD%AF%E7%BC%96%E7%A0%81-FFmpeg-x264%E7%BC%96%E7%A0%81H264%E6%96%87%E4%BB%B6/" rel="next" title="iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件">
+                <i class="fa fa-chevron-left"></i> iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/04/09/Cronet%E5%BA%93%E7%BC%96%E8%AF%91/" rel="prev" title="Cronet库编译">
+                Cronet库编译 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/assets/blogImg/icon.png"
+                alt="ibabyblue" />
+            
+              <p class="site-author-name" itemprop="name">ibabyblue</p>
+              <p class="site-description motion-element" itemprop="description">一名就职于猎豹移动的iOS Coder</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ibabyblue" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:ibabyblue_z@icloud.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ibabyblue</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="音视频," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="上篇记录了利用x264编码的实现，这里记录一下FFmpeg+x264编码为H.264的实现过程，为什么使用FFmpeg+x264，因为两种框架互补组成了强大的编解码器（FFmpeg解码，x246编码）。 编译FFmpeg+x264FFmpeg地址：https:&#x2F;&#x2F;github.com&#x2F;FFmpeg&#x2F;FFmpeg编译脚本：https:&#x2F;&#x2F;github.com&#x2F;kewlbear&#x2F;FFmpeg-iOS-">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件">
+<meta property="og:url" content="http://yoursite.com/2018/02/22/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E8%BD%AF%E7%BC%96%E7%A0%81-FFmpeg-x264%E7%BC%96%E7%A0%81H264%E6%96%87%E4%BB%B6/index.html">
+<meta property="og:site_name" content="ibabyblue&#39;s Blog">
+<meta property="og:description" content="上篇记录了利用x264编码的实现，这里记录一下FFmpeg+x264编码为H.264的实现过程，为什么使用FFmpeg+x264，因为两种框架互补组成了强大的编解码器（FFmpeg解码，x246编码）。 编译FFmpeg+x264FFmpeg地址：https:&#x2F;&#x2F;github.com&#x2F;FFmpeg&#x2F;FFmpeg编译脚本：https:&#x2F;&#x2F;github.com&#x2F;kewlbear&#x2F;FFmpeg-iOS-">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2018-02-22T07:02:03.000Z">
+<meta property="article:modified_time" content="2020-04-10T07:18:11.954Z">
+<meta property="article:author" content="ibabyblue">
+<meta property="article:tag" content="音视频">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'ibabyblue'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/02/22/iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件/"/>
+
+
+
+
+
+  <title>iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件 | ibabyblue's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ibabyblue's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向 身之所往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/22/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E8%BD%AF%E7%BC%96%E7%A0%81-FFmpeg-x264%E7%BC%96%E7%A0%81H264%E6%96%87%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ibabyblue">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/assets/blogImg/icon.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ibabyblue's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-02-22T15:02:03+08:00">
+                2018-02-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index">
+                    <span itemprop="name">iOS音视频技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>上篇记录了利用x264编码的实现，这里记录一下FFmpeg+x264编码为H.264的实现过程，为什么使用FFmpeg+x264，因为两种框架互补组成了强大的编解码器（FFmpeg解码，x246编码）。</p>
+<p>编译FFmpeg+x264<br>FFmpeg<br>地址：<a href="https://github.com/FFmpeg/FFmpeg" target="_blank" rel="noopener">https://github.com/FFmpeg/FFmpeg</a><br>编译脚本：<a href="https://github.com/kewlbear/FFmpeg-iOS-build-script" target="_blank" rel="noopener">https://github.com/kewlbear/FFmpeg-iOS-build-script</a><br>x264<br>地址：<a href="http://www.videolan.org/developers/x264.html" target="_blank" rel="noopener">http://www.videolan.org/developers/x264.html</a><br>编译脚本：<a href="https://github.com/kewlbear/x264-ios" target="_blank" rel="noopener">https://github.com/kewlbear/x264-ios</a><br>具体编译过程：x264的编译过程在上篇<a href="https://www.jianshu.com/p/b4aacf16274e" target="_blank" rel="noopener">iOS音视频开发-视频软编码(x264编码H.264文件)</a><br>FFmpeg+x264编译步骤：</p>
+<ul>
+<li><p>1、将编译好的x264文件夹放置在FFmpeg脚本目录下，并将文件夹改名为fat-x264(因为脚本中定义的引用x264文件夹的名称为fat-x264);</p>
+</li>
+<li><p>2、执行脚本文件：./build-ffmpeg.sh。<br>这里需要注意的问题，之前编译并没有遇到，此次总结重新编译了一次，遇到一些问题记录一下。<br>  1）现阶段最新的FFmpeg版本为：n3.4.2，脚本中使用版本号为：n3.4。执行脚本的时候会出现诸如此类的错误：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">libavcodec&#x2F;libx264.c: In function &#39;x264_init_static&#39;:</span><br><span class="line">libavcodec&#x2F;libx264.c:892.9 error: &#39;x264_bit_depth&#39; undeclared(first use in this     function)</span><br><span class="line">if(x264_bit_depth&#x3D;&#x3D; 8)</span><br></pre></td></tr></table></figure>
+<p>解决办法：修改脚本文件中的版本号：FF_VERSION=”3.4-&gt;FF_VERSION=”3.4.2”。</p>
+<p>  2）要将x264编译进FFmpeg中，需要取消脚本中对该句代码的注销：</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#X264&#x3D;&#96;pwd&#96;&#x2F;fat-x264 -&gt;X264&#x3D;&#96;pwd&#96;&#x2F;fat-x264</span><br></pre></td></tr></table></figure>
+<p>3）关于bitcode，现阶段在编译库文件的时候，支持bitcode还是有必要的（毕竟某个工程因为使用了此编译库文件放弃bitcode功能，向上层开发者提供了功能，是不使用是他们的事了），脚本中已经实现了支持bitcode功能，不必修改。<br>  4）将编译好的文件拖拽到工程中，需要添加的依赖库为：<br>libiconv.dylib、<br>libz.dylib/libbz2.dylib、<br>CoreMedia.framework、<br>AVFoundation.framework、<br>VideoToolbox.framework，<br>不然会报并未支持arm64……架构的错误。<br>命令行命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;查看是否支持相应的架构：arm64 i386....</span><br><span class="line">lipo -info libxx.a</span><br><span class="line">&#x2F;&#x2F;查看是够支持bitcode  &gt;&#x3D;0</span><br><span class="line">otool -l libx264.a | grep __bitcode | wc -l</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>介绍：不错的编译过程文章<br>视频捕获和编码配置代码在前面已记录，这里就不赘述了。FFmpeg+x264编码实现代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br></pre></td><td class="code"><pre><span class="line">#import &lt;Foundation&#x2F;Foundation.h&gt;</span><br><span class="line">#import &lt;CoreMedia&#x2F;CoreMedia.h&gt;</span><br><span class="line">@class BBVideoConfig;</span><br><span class="line">@interface BBH264SoftEncoder : NSObject</span><br><span class="line">&#x2F;*</span><br><span class="line">* 设置编码后文件的保存路径</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)setFilePath:(NSString *)path;</span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">* 初始化编码配置</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)setupEncodeWithConfig:(BBVideoConfig *)config;</span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">* 将CMSampleBufferRef格式的数据编码成h264并写入文件</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)encoderToH264:(CMSampleBufferRef)sampleBuffer;</span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">* 释放资源</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)freeX264Resource;</span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">#import &quot;BBH264SoftEncoder.h&quot;</span><br><span class="line">#import &quot;BBVideoConfig.h&quot;</span><br><span class="line"></span><br><span class="line">#ifdef __cplusplus</span><br><span class="line">extern &quot;C&quot; &#123;</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line">#include &lt;libavutil&#x2F;opt.h&gt;</span><br><span class="line">#include &lt;libavutil&#x2F;imgutils.h&gt;</span><br><span class="line">#include &lt;libavcodec&#x2F;avcodec.h&gt;</span><br><span class="line">#include &lt;libavformat&#x2F;avformat.h&gt;</span><br><span class="line">#include &lt;libswscale&#x2F;swscale.h&gt;</span><br><span class="line"></span><br><span class="line">#ifdef __cplusplus</span><br><span class="line">&#125;;</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line">@implementation BBH264SoftEncoder</span><br><span class="line">&#123;</span><br><span class="line">    AVFormatContext                     *pFormatCtx;</span><br><span class="line">    AVOutputFormat                      *fmt;</span><br><span class="line">    AVStream                            *video_st;</span><br><span class="line">    AVCodecContext                      *pCodecCtx;</span><br><span class="line">    AVCodec                             *pCodec;</span><br><span class="line">    AVPacket                             pkt;</span><br><span class="line">    uint8_t                             *picture_buf;</span><br><span class="line">    AVFrame                             *pFrame;</span><br><span class="line">    int                                  picture_size;</span><br><span class="line">    int                                  y_size;</span><br><span class="line">    int                                  framecnt;</span><br><span class="line">    char                                *out_file;</span><br><span class="line"></span><br><span class="line">    int                                  encoder_h264_frame_width; &#x2F;&#x2F; 编码的图像宽度</span><br><span class="line">    int                                  encoder_h264_frame_height; &#x2F;&#x2F; 编码的图像高度</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">* 设置编码后文件的文件名，保存路径</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)setFilePath:(NSString *)path;</span><br><span class="line">&#123;</span><br><span class="line">    out_file &#x3D; [self nsstring2char:path];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">* 将路径转成C语言字符串(传入路径为C字符串)</span><br><span class="line">*&#x2F;</span><br><span class="line">- (char*)nsstring2char:(NSString *)path</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    NSUInteger len &#x3D; [path length];</span><br><span class="line">    char *filepath &#x3D; (char*)malloc(sizeof(char) * (len + 1));</span><br><span class="line"></span><br><span class="line">    [path getCString:filepath maxLength:len + 1 encoding:[NSString defaultCStringEncoding]];</span><br><span class="line"></span><br><span class="line">    return filepath;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">*  设置X264</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)setupEncodeWithConfig:(BBVideoConfig *)config</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F; 1.默认从第0帧开始(记录当前的帧数)</span><br><span class="line">    framecnt &#x3D; 0;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 2.记录传入的宽度&amp;高度</span><br><span class="line">    encoder_h264_frame_width &#x3D; config.videoSize.width;</span><br><span class="line">    encoder_h264_frame_height &#x3D; config.videoSize.height;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 3.注册FFmpeg所有编解码器(无论编码还是解码都需要该步骤)</span><br><span class="line">    av_register_all();</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 4.初始化AVFormatContext: 用作之后写入视频帧并编码成 h264，贯穿整个工程当中(释放资源时需要销毁)</span><br><span class="line">    pFormatCtx &#x3D; avformat_alloc_context();</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 5.设置输出文件的路径，fmt初始化的时候根据传入的参数猜出video_codec、mime_type、extensions等等信息。</span><br><span class="line">    fmt &#x3D; av_guess_format(NULL, out_file, NULL);</span><br><span class="line">    pFormatCtx-&gt;oformat &#x3D; fmt;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 6.打开文件的缓冲区输入输出，flags 标识为  AVIO_FLAG_READ_WRITE ，可读写</span><br><span class="line">    if (avio_open(&amp;pFormatCtx-&gt;pb, out_file, AVIO_FLAG_READ_WRITE) &lt; 0)&#123;</span><br><span class="line">        printf(&quot;Failed to open output file! \n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 7.创建新的输出流, 用于写入文件</span><br><span class="line">    video_st &#x3D; avformat_new_stream(pFormatCtx, 0);</span><br><span class="line"></span><br><span class="line">    if (video_st&#x3D;&#x3D;NULL)&#123; printf(&quot;Failed to setup stream! \n&quot;); return; &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.pCodecCtx 用户存储编码所需的参数格式等等</span><br><span class="line">    &#x2F;&#x2F; 8.1.从媒体流中获取到编码结构体，他们是一一对应的关系，一个 AVStream 对应一个  AVCodecContext</span><br><span class="line">    AVCodec *codec &#x3D; avcodec_find_encoder(pFormatCtx-&gt;oformat-&gt;video_codec);</span><br><span class="line">    pCodecCtx &#x3D; avcodec_alloc_context3(codec);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.2.设置编码器的编码格式(是一个id)，每一个编码器都对应着自己的 id，例如 h264 的编码 id 就是 AV_CODEC_ID_H264</span><br><span class="line">    pCodecCtx-&gt;codec_id &#x3D; fmt-&gt;video_codec;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.3.设置编码类型为 视频编码</span><br><span class="line">    pCodecCtx-&gt;codec_type &#x3D; AVMEDIA_TYPE_VIDEO;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.4.设置像素格式为 yuv 格式</span><br><span class="line">    pCodecCtx-&gt;pix_fmt &#x3D; AV_PIX_FMT_YUV420P;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.5.设置视频的宽高</span><br><span class="line">    pCodecCtx-&gt;width &#x3D; encoder_h264_frame_width;</span><br><span class="line">    pCodecCtx-&gt;height &#x3D; encoder_h264_frame_height;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.6.设置帧率</span><br><span class="line">    pCodecCtx-&gt;time_base.num &#x3D; 1;</span><br><span class="line">    pCodecCtx-&gt;time_base.den &#x3D; 25;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.7.设置码率（比特率）</span><br><span class="line">    pCodecCtx-&gt;bit_rate &#x3D; config.bitrate;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.8.视频质量度量标准(常见qmin&#x3D;10, qmax&#x3D;51)</span><br><span class="line">    pCodecCtx-&gt;qmin &#x3D; 10;</span><br><span class="line">    pCodecCtx-&gt;qmax &#x3D; 51;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.9.设置图像组层的大小(GOP--&gt;两个I帧之间的间隔)</span><br><span class="line">    pCodecCtx-&gt;gop_size &#x3D; 30;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 8.10.设置 B 帧最大的数量，B帧为视频图片空间的前后预测帧， B 帧相对于 I、P 帧来说，压缩率比较大，也就是说相同码率的情况下，</span><br><span class="line">    &#x2F;&#x2F; 越多 B 帧的视频，越清晰，现在很多打视频网站的高清视频，就是采用多编码 B 帧去提高清晰度，</span><br><span class="line">    &#x2F;&#x2F; 但同时对于编解码的复杂度比较高，比较消耗性能与时间</span><br><span class="line">    pCodecCtx-&gt;max_b_frames &#x3D; 5;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 9.可选设置</span><br><span class="line">    AVDictionary *param &#x3D; 0;</span><br><span class="line">    &#x2F;&#x2F; H.264</span><br><span class="line">    if(pCodecCtx-&gt;codec_id &#x3D;&#x3D; AV_CODEC_ID_H264) &#123;</span><br><span class="line">        &#x2F;&#x2F; 通过--preset的参数调节编码速度和质量的平衡。</span><br><span class="line">        av_dict_set(&amp;param, &quot;preset&quot;, &quot;slow&quot;, 0);</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 通过--tune的参数值指定片子的类型，是和视觉优化的参数，或有特别的情况。</span><br><span class="line">        &#x2F;&#x2F; zerolatency: 零延迟，用在需要非常低的延迟的情况下，比如视频直播的编码</span><br><span class="line">        av_dict_set(&amp;param, &quot;tune&quot;, &quot;zerolatency&quot;, 0);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 10.输出打印信息，内部是通过printf函数输出（不需要输出可以注释掉）</span><br><span class="line">    av_dump_format(pFormatCtx, 0, out_file, 1);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 11.通过 codec_id 找到对应的编码器</span><br><span class="line">    pCodec &#x3D; avcodec_find_encoder(pCodecCtx-&gt;codec_id);</span><br><span class="line">    if (!pCodec) &#123;</span><br><span class="line">        printf(&quot;Can not find encoder! \n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 12.打开编码器，并设置参数 param</span><br><span class="line">    if (avcodec_open2(pCodecCtx, pCodec,&amp;param) &lt; 0) &#123;</span><br><span class="line">        printf(&quot;Failed to open encoder! \n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 13.将AVCodecContext的成员复制到AVCodecParameters结构体</span><br><span class="line">    avcodec_parameters_from_context(video_st-&gt;codecpar, pCodecCtx);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 14.真实帧率</span><br><span class="line">    AVRational rational &#x3D; &#123;1, 25&#125;;</span><br><span class="line">    av_stream_set_r_frame_rate(video_st, rational);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 15.初始化原始数据对象: AVFrame</span><br><span class="line">    pFrame &#x3D; av_frame_alloc();</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 16.通过像素格式(这里为 YUV)获取图片的真实大小，例如将 480 * 720 转换成 int 类型</span><br><span class="line">    av_image_fill_arrays(pFrame-&gt;data, pFrame-&gt;linesize, picture_buf, pCodecCtx-&gt;pix_fmt, pCodecCtx-&gt;width, pCodecCtx-&gt;height, 1);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 17.h264 封装格式的文件头部，基本上每种编码都有着自己的格式的头部。</span><br><span class="line">    if (avformat_write_header(pFormatCtx, NULL) &lt; 0) &#123; printf(&quot;Failed to write! \n&quot;); return; &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 18.创建编码后的数据 AVPacket 结构体来存储 AVFrame 编码后生成的数据</span><br><span class="line">    av_new_packet(&amp;pkt, picture_size);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 19.设置 yuv 数据中 y 图的宽高</span><br><span class="line">    y_size &#x3D; pCodecCtx-&gt;width * pCodecCtx-&gt;height;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">* 将CMSampleBufferRef格式的数据编码成h264并写入文件</span><br><span class="line">*</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)encoderToH264:(CMSampleBufferRef)sampleBuffer</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F; 1.通过CMSampleBufferRef对象获取CVPixelBufferRef对象</span><br><span class="line">    CVPixelBufferRef imageBuffer &#x3D; CMSampleBufferGetImageBuffer(sampleBuffer);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 2.锁定imageBuffer内存地址开始进行编码</span><br><span class="line">    if (CVPixelBufferLockBaseAddress(imageBuffer, 0) &#x3D;&#x3D; kCVReturnSuccess) &#123;</span><br><span class="line">        &#x2F;&#x2F; 3.从CVPixelBufferRef读取YUV的值</span><br><span class="line">        &#x2F;&#x2F; NV12和NV21属于YUV格式，是一种two-plane模式，即Y和UV分为两个Plane，但是UV（CbCr）为交错存储，而不是分为三个plane</span><br><span class="line">        &#x2F;&#x2F; 3.1.获取Y分量的地址</span><br><span class="line">        UInt8 *bufferPtr &#x3D; (UInt8 *)CVPixelBufferGetBaseAddressOfPlane(imageBuffer,0);</span><br><span class="line">        &#x2F;&#x2F; 3.2.获取UV分量的地址</span><br><span class="line">        UInt8 *bufferPtr1 &#x3D; (UInt8 *)CVPixelBufferGetBaseAddressOfPlane(imageBuffer,1);</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 3.3.根据像素获取图片的真实宽度&amp;高度</span><br><span class="line">        size_t width &#x3D; CVPixelBufferGetWidth(imageBuffer);</span><br><span class="line">        size_t height &#x3D; CVPixelBufferGetHeight(imageBuffer);</span><br><span class="line">        &#x2F;&#x2F; 获取Y分量长度</span><br><span class="line">        size_t bytesrow0 &#x3D; CVPixelBufferGetBytesPerRowOfPlane(imageBuffer,0);</span><br><span class="line">        size_t bytesrow1  &#x3D; CVPixelBufferGetBytesPerRowOfPlane(imageBuffer,1);</span><br><span class="line">        UInt8 *yuv420_data &#x3D; (UInt8 *)malloc(width * height * 3 &#x2F; 2);</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 3.4.将NV12数据转成YUV420P(I420)数据</span><br><span class="line">        UInt8 *pY &#x3D; bufferPtr;</span><br><span class="line">        UInt8 *pUV &#x3D; bufferPtr1;</span><br><span class="line">        UInt8 *pU &#x3D; yuv420_data + width * height;</span><br><span class="line">        UInt8 *pV &#x3D; pU + width * height &#x2F; 4;</span><br><span class="line">        for(int i &#x3D;0;i&lt;height;i++)</span><br><span class="line">        &#123;</span><br><span class="line">            memcpy(yuv420_data+i*width,pY+i*bytesrow0,width);</span><br><span class="line">        &#125;</span><br><span class="line">        for(int j &#x3D; 0;j&lt;height&#x2F;2;j++)</span><br><span class="line">        &#123;</span><br><span class="line">            for(int i &#x3D;0;i&lt;width&#x2F;2;i++)</span><br><span class="line">            &#123;</span><br><span class="line">                *(pU++) &#x3D; pUV[i&lt;&lt;1];</span><br><span class="line">                *(pV++) &#x3D; pUV[(i&lt;&lt;1) + 1];</span><br><span class="line">            &#125;</span><br><span class="line">            pUV +&#x3D; bytesrow1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 3.5.分别读取YUV的数据</span><br><span class="line">        picture_buf &#x3D; yuv420_data;</span><br><span class="line">        pFrame-&gt;data[0] &#x3D; picture_buf;                   &#x2F;&#x2F; Y</span><br><span class="line">        pFrame-&gt;data[1] &#x3D; picture_buf + y_size;          &#x2F;&#x2F; U</span><br><span class="line">        pFrame-&gt;data[2] &#x3D; picture_buf + y_size * 5 &#x2F; 4;  &#x2F;&#x2F; V</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 4.设置当前帧</span><br><span class="line">        pFrame-&gt;pts &#x3D; framecnt;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 4.设置宽度高度以及YUV格式</span><br><span class="line">        pFrame-&gt;width &#x3D; encoder_h264_frame_width;</span><br><span class="line">        pFrame-&gt;height &#x3D; encoder_h264_frame_height;</span><br><span class="line">        pFrame-&gt;format &#x3D; AV_PIX_FMT_YUV420P;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 5.对编码前的原始数据(AVFormat)利用编码器进行编码，将 pFrame 编码后的数据传入pkt 中</span><br><span class="line">        int ret &#x3D; avcodec_send_frame(pCodecCtx, pFrame);</span><br><span class="line">        if (ret !&#x3D; 0) &#123;</span><br><span class="line">            printf(&quot;Failed to encode! \n&quot;);</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        while (avcodec_receive_packet(pCodecCtx, &amp;pkt) &#x3D;&#x3D; 0) &#123;</span><br><span class="line">            framecnt++;</span><br><span class="line">            pkt.stream_index &#x3D; video_st-&gt;index;</span><br><span class="line">            &#x2F;&#x2F;也可以使用C语言函数：fwrite()、fflush()写文件和清空文件写入缓冲区。</span><br><span class="line">            ret &#x3D; av_write_frame(pFormatCtx, &amp;pkt);</span><br><span class="line">            if (ret &lt; 0) &#123;</span><br><span class="line">                printf(&quot;Failed write to file！\n&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">            &#x2F;&#x2F;释放packet</span><br><span class="line">            av_packet_unref(&amp;pkt);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 7.释放yuv数据</span><br><span class="line">        free(yuv420_data);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    CVPixelBufferUnlockBaseAddress(imageBuffer, 0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;*</span><br><span class="line">* 释放资源</span><br><span class="line">*&#x2F;</span><br><span class="line">- (void)freeX264Resource</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 1.将还未输出的AVPacket输出出来</span><br><span class="line">    av_write_trailer(pFormatCtx);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 2.关闭资源</span><br><span class="line">    avcodec_close(pCodecCtx);</span><br><span class="line">    av_free(pFrame);</span><br><span class="line"></span><br><span class="line">    avio_close(pFormatCtx-&gt;pb);</span><br><span class="line">    avformat_free_context(pFormatCtx);</span><br><span class="line">&#125;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>编码使用FFmpeg新版API实现，网上很多都是较旧的API代码，但不影响，只是个别接口变更而已，整体的实现思路一致。<br>学习过程中，查阅了大量的资料，收获颇丰，非常感谢学习路上各位coder的无私分享，尤其coderWhy先森、七牛的深爱、雷霄骅（致敬）。<br>参考链接：<br><a href="https://depthlove.github.io/2015/09/18/use-ffmpeg-and-x264-encode-iOS-camera-video-to-h264/" target="_blank" rel="noopener">https://depthlove.github.io/2015/09/18/use-ffmpeg-and-x264-encode-iOS-camera-video-to-h264/</a><br><a href="http://blog.csdn.net/leixiaohua1020/article/details/25430425" target="_blank" rel="noopener">http://blog.csdn.net/leixiaohua1020/article/details/25430425</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E9%9F%B3%E8%A7%86%E9%A2%91/" rel="tag"># 音视频</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/02/11/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E8%BD%AF%E7%BC%96%E7%A0%81%E7%9A%84%E5%AE%9E%E7%8E%B0-x264/" rel="next" title="iOS音视频开发-视频软编码的实现-x264">
+                <i class="fa fa-chevron-left"></i> iOS音视频开发-视频软编码的实现-x264
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/02/26/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E9%9F%B3%E9%A2%91%E7%A1%AC%E7%BC%96%E7%A0%81-AudioToolbox-PCMToAAC/" rel="prev" title="iOS音视频开发-音频硬编码-AudioToolbox-PCMToAAC">
+                iOS音视频开发-音频硬编码-AudioToolbox-PCMToAAC <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/assets/blogImg/icon.png"
+                alt="ibabyblue" />
+            
+              <p class="site-author-name" itemprop="name">ibabyblue</p>
+              <p class="site-description motion-element" itemprop="description">一名就职于猎豹移动的iOS Coder</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ibabyblue" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:ibabyblue_z@icloud.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ibabyblue</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="音视频," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="视频软编码：软编码主要是利用CPU编码的过程，通常为FFmpeg+x264。 FFmpegFFmpeg是一个非常强大的音视频处理库,包括视频采集功能、视频格式转换、视频抓图、给视频加水印等。FFmpeg在Linux平台下开发，但它同样也可以在其它操作系统环境中编译运行，包括Windows、Mac OS X等。x264H.264是ITU制定的视频编码标准而x264是一个开源的H.264&#x2F;MPEG-4">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS音视频开发-视频软编码的实现-x264">
+<meta property="og:url" content="http://yoursite.com/2018/02/11/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E8%BD%AF%E7%BC%96%E7%A0%81%E7%9A%84%E5%AE%9E%E7%8E%B0-x264/index.html">
+<meta property="og:site_name" content="ibabyblue&#39;s Blog">
+<meta property="og:description" content="视频软编码：软编码主要是利用CPU编码的过程，通常为FFmpeg+x264。 FFmpegFFmpeg是一个非常强大的音视频处理库,包括视频采集功能、视频格式转换、视频抓图、给视频加水印等。FFmpeg在Linux平台下开发，但它同样也可以在其它操作系统环境中编译运行，包括Windows、Mac OS X等。x264H.264是ITU制定的视频编码标准而x264是一个开源的H.264&#x2F;MPEG-4">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://yoursite.com/assets/x264_sh.png">
+<meta property="og:image" content="http://yoursite.com/assets/x264_iOS.png">
+<meta property="article:published_time" content="2018-02-11T06:52:45.000Z">
+<meta property="article:modified_time" content="2020-04-10T07:18:17.799Z">
+<meta property="article:author" content="ibabyblue">
+<meta property="article:tag" content="音视频">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/assets/x264_sh.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'ibabyblue'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/02/11/iOS音视频开发-视频软编码的实现-x264/"/>
+
+
+
+
+
+  <title>iOS音视频开发-视频软编码的实现-x264 | ibabyblue's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ibabyblue's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向 身之所往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/11/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E8%BD%AF%E7%BC%96%E7%A0%81%E7%9A%84%E5%AE%9E%E7%8E%B0-x264/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ibabyblue">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/assets/blogImg/icon.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ibabyblue's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS音视频开发-视频软编码的实现-x264</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-02-11T14:52:45+08:00">
+                2018-02-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index">
+                    <span itemprop="name">iOS音视频技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>视频软编码：<br>软编码主要是利用CPU编码的过程，通常为FFmpeg+x264。</p>
+<p>FFmpeg<br>FFmpeg是一个非常强大的音视频处理库,包括视频采集功能、视频格式转换、视频抓图、给视频加水印等。<br>FFmpeg在Linux平台下开发，但它同样也可以在其它操作系统环境中编译运行，包括Windows、Mac OS X等。<br>x264<br>H.264是ITU制定的视频编码标准<br>而x264是一个开源的H.264/MPEG-4 AVC视频编码函数库，是最好的有损视频编码器,里面集成了非常多优秀的算法用于视频编码.<br><a href="https://www.videolan.org/developers/x264.html" target="_blank" rel="noopener">x264官网</a><br>PS:FFmpeg本身并不包含编码器，但存在强大的解码器，而x264只提供了强大的编码器，但是其独立存在，社区提供了将x264编译进FFmpeg的方法，所以开发时使用的为FFmpeg+x264。这里记录x264编码器的使用方法，FFmpeg+x264的使用后续记录。<br>编译x264<br>下载x264源码：<br><a href="https://www.videolan.org/developers/x264.html" target="_blank" rel="noopener">https://www.videolan.org/developers/x264.html</a></p>
+<p>下载gas-preprocessor文件：<br><a href="https://github.com/libav/gas-preprocessor。" target="_blank" rel="noopener">https://github.com/libav/gas-preprocessor。</a><br>将下载的gas-preprocessor文件拷贝到/usr/local/bin目录下。<br>修改文件权限：chmod 777 /usr/local/bin/gas-preprocessor.pl。</p>
+<p>下载x264编译脚本文件：<br><a href="https://github.com/kewlbear/x264-ios" target="_blank" rel="noopener">https://github.com/kewlbear/x264-ios</a><br>将脚本文件build-x264.sh 放在x264源码文件同级目录下，并不是x264文件夹里面。<br><img src="/assets/x264_sh.png" alt=""><br>同级目录.png<br>修改权限、执行脚本：</p>
+<p>sudo chmod u+x build-x264.sh<br>sudo ./build-x264.sh<br>当脚本执行过程中可能会出现警告导致不能编译成功，一般为yasm版本过低或者nasm版本过低导致的(我遇到的)。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Found yasm x.x.x.xxxx</span><br><span class="line">Minimum version is yasm-x.x.x</span><br><span class="line">If you really want to compile without asm, configure with --disable-asm.</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Found nasm x.x.x.xxxx</span><br><span class="line">Minimum version is nasm-x.x.x</span><br><span class="line">If you really want to compile without asm, configure with --disable-asm.</span><br></pre></td></tr></table></figure>
+<p>解决办法：<br>下载Homebrew,利用Homebrew下载yasm/nasm。<br>Homebrew下载安装：</p>
+<p>地址：<a href="https://brew.sh/" target="_blank" rel="noopener">https://brew.sh/</a><br>Homebrew安装yasm命令：brew install yasm<br>Homebrew安装nasm命令：brew install nasm<br>脚本执行完毕生成的文件：<br><img src="/assets/x264_iOS.png" alt=""><br>编译好的x264文件夹.png<br>使用命令行工具查看编译好的.a文件支持的架构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">命令：lipo -info libx264.a</span><br><span class="line">结果：Architectures in the fat file: libx264.a are: armv7 armv7s i386 x86_64 arm64</span><br></pre></td></tr></table></figure>
+<p>当然执行脚本的时候你可以选择想要的架构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">To build everything:&#x2F;&#x2F;支持所有架构</span><br><span class="line">.&#x2F;build-x264.sh</span><br><span class="line"></span><br><span class="line">To build for arm64:&#x2F;&#x2F;只支持arm64</span><br><span class="line">.&#x2F;build-x264.sh arm64</span><br><span class="line"></span><br><span class="line">To build fat library for armv7 and x86_64 (64-bit simulator):&#x2F;&#x2F;只支持armv7和x86_64</span><br><span class="line">.&#x2F;build-x264.sh armv7 x86_64</span><br><span class="line"></span><br><span class="line">To build fat library from separately built thin libraries:&#x2F;&#x2F;支持各架构独立库文件</span><br><span class="line">.&#x2F;build-x264.sh lipo</span><br></pre></td></tr></table></figure>
+<p>x264编码实现<br>将编译好的x264-iOS文件夹拖入工程即可。<br>x264编码参数设置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line">- (void)setupEncodeWithConfig:(BBVideoConfig *)config&#123;</span><br><span class="line"></span><br><span class="line">    _config &#x3D; config;</span><br><span class="line"></span><br><span class="line">    pX264Param &#x3D; (x264_param_t *)malloc(sizeof(x264_param_t));</span><br><span class="line">    assert(pX264Param);</span><br><span class="line">    &#x2F;* 配置参数预设置</span><br><span class="line">    * 主要是zerolatency该参数，即时编码。</span><br><span class="line">    * static const char * const x264_tune_names[] &#x3D; &#123; &quot;film&quot;, &quot;animation&quot;, &quot;grain&quot;, &quot;stillimage&quot;, &quot;psnr&quot;, &quot;ssim&quot;, &quot;fastdecode&quot;, &quot;zerolatency&quot;, 0 &#125;;</span><br><span class="line">    *&#x2F;</span><br><span class="line">    x264_param_default_preset(pX264Param, &quot;veryfast&quot;, &quot;zerolatency&quot;);</span><br><span class="line"></span><br><span class="line">    &#x2F;* 设置Profile.使用Baseline profile</span><br><span class="line">    * static const char * const x264_profile_names[] &#x3D; &#123; &quot;baseline&quot;, &quot;main&quot;, &quot;high&quot;, &quot;high10&quot;, &quot;high422&quot;, &quot;high444&quot;, 0 &#125;;</span><br><span class="line">    *&#x2F;</span><br><span class="line">    x264_param_apply_profile(pX264Param, &quot;baseline&quot;);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; cpuFlags</span><br><span class="line">    pX264Param-&gt;i_threads &#x3D; X264_SYNC_LOOKAHEAD_AUTO; &#x2F;&#x2F; 取空缓冲区继续使用不死锁的保证</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 视频宽高</span><br><span class="line">    pX264Param-&gt;i_width   &#x3D; config.videoSize.width; &#x2F;&#x2F; 要编码的图像宽度.</span><br><span class="line">    pX264Param-&gt;i_height  &#x3D; config.videoSize.height; &#x2F;&#x2F; 要编码的图像高度</span><br><span class="line">    pX264Param-&gt;i_frame_total &#x3D; 0; &#x2F;&#x2F;编码总帧数，未知设置为0</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 流参数</span><br><span class="line">    pX264Param-&gt;b_cabac &#x3D; 0; &#x2F;&#x2F;支持利用基于上下文的自适应的算术编码 0为不支持</span><br><span class="line">    pX264Param-&gt;i_bframe &#x3D; 5;&#x2F;&#x2F;两个参考帧之间B帧的数量</span><br><span class="line">    pX264Param-&gt;b_interlaced &#x3D; 0;&#x2F;&#x2F;隔行扫描</span><br><span class="line">    pX264Param-&gt;rc.i_rc_method &#x3D; X264_RC_ABR; &#x2F;&#x2F; 码率控制，CQP(恒定质量)，CRF(恒定码率)，ABR(平均码率)</span><br><span class="line">    pX264Param-&gt;i_level_idc &#x3D; 30; &#x2F;&#x2F; 编码复杂度</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 图像质量</span><br><span class="line">    pX264Param-&gt;rc.f_rf_constant &#x3D; 15; &#x2F;&#x2F; rc.f_rf_constant是实际质量，越大图像越花，越小越清晰</span><br><span class="line">    pX264Param-&gt;rc.f_rf_constant_max &#x3D; 45; &#x2F;&#x2F; param.rc.f_rf_constant_max ，图像质量的最大值。</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 速率控制参数 通常为屏幕分辨率*3 （宽x高x3）</span><br><span class="line">    pX264Param-&gt;rc.i_bitrate &#x3D; config.bitrate &#x2F; 1000; &#x2F;&#x2F; 码率(比特率), x264使用的bitrate需要&#x2F;1000。</span><br><span class="line">    &#x2F;&#x2F; pX264Param-&gt;rc.i_vbv_max_bitrate&#x3D;(int)((m_bitRate * 1.2) &#x2F; 1000) ; &#x2F;&#x2F; 平均码率模式下，最大瞬时码率，默认0(与-B设置相同)</span><br><span class="line">    pX264Param-&gt;rc.i_vbv_buffer_size &#x3D; pX264Param-&gt;rc.i_vbv_max_bitrate &#x3D; (int)((config.bitrate * 1.2) &#x2F; 1000);</span><br><span class="line">    pX264Param-&gt;rc.f_vbv_buffer_init &#x3D; 0.9;&#x2F;&#x2F;默认0.9</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 使用实时视频传输时，需要实时发送sps,pps数据</span><br><span class="line">    pX264Param-&gt;b_repeat_headers &#x3D; 1;  &#x2F;&#x2F; 重复SPS&#x2F;PPS 放到关键帧前面。该参数设置是让每个I帧都附带sps&#x2F;pps。</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 帧率</span><br><span class="line">    pX264Param-&gt;i_fps_num  &#x3D; config.fps; &#x2F;&#x2F; 帧率分子</span><br><span class="line">    pX264Param-&gt;i_fps_den  &#x3D; 1; &#x2F;&#x2F; 帧率分母</span><br><span class="line">    pX264Param-&gt;i_timebase_den &#x3D; pX264Param-&gt;i_fps_num;</span><br><span class="line">    pX264Param-&gt;i_timebase_num &#x3D; pX264Param-&gt;i_fps_den;</span><br><span class="line"></span><br><span class="line">    &#x2F;* I帧间隔 GOP</span><br><span class="line">    * 一般为帧率的整数倍，通常设置2倍，即 GOP &#x3D; 帧率 * 2；</span><br><span class="line">    *&#x2F;</span><br><span class="line">    pX264Param-&gt;b_intra_refresh &#x3D; 1;</span><br><span class="line">    pX264Param-&gt;b_annexb &#x3D; 1;</span><br><span class="line">    pX264Param-&gt;i_keyint_max &#x3D; config.fps * 2;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Log参数，打印编码信息</span><br><span class="line">    pX264Param-&gt;i_log_level  &#x3D; X264_LOG_DEBUG;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 编码需要的辅助变量</span><br><span class="line">    iNal &#x3D; 0;</span><br><span class="line">    pNals &#x3D; NULL;</span><br><span class="line"></span><br><span class="line">    pPicIn &#x3D; (x264_picture_t *)malloc(sizeof(x264_picture_t));</span><br><span class="line">    memset(pPicIn, 0, sizeof(x264_picture_t));</span><br><span class="line">    x264_picture_alloc(pPicIn, X264_CSP_I420, pX264Param-&gt;i_width, pX264Param-&gt;i_height);</span><br><span class="line">    pPicIn-&gt;i_type &#x3D; X264_TYPE_AUTO;</span><br><span class="line">    pPicIn-&gt;img.i_plane &#x3D; 3;</span><br><span class="line"></span><br><span class="line">    pPicOut &#x3D; (x264_picture_t *)malloc(sizeof(x264_picture_t));</span><br><span class="line">    memset(pPicOut, 0, sizeof(x264_picture_t));</span><br><span class="line">    x264_picture_init(pPicOut);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 打开编码器句柄,通过x264_encoder_parameters得到设置给X264</span><br><span class="line">    &#x2F;&#x2F; 的参数.通过x264_encoder_reconfig更新X264的参数</span><br><span class="line">    pX264Handle &#x3D; x264_encoder_open(pX264Param);</span><br><span class="line">    assert(pX264Handle);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>x264编码主要实现代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line">- (void)encoderToH264:(CMSampleBufferRef)sampleBuffer&#123;</span><br><span class="line"></span><br><span class="line">    CVImageBufferRef imageBuffer &#x3D; CMSampleBufferGetImageBuffer(sampleBuffer);</span><br><span class="line"></span><br><span class="line">    CVPixelBufferLockBaseAddress(imageBuffer, 0);</span><br><span class="line"></span><br><span class="line">    UInt8 *bufferPtr &#x3D; (UInt8 *)CVPixelBufferGetBaseAddressOfPlane(imageBuffer,0);</span><br><span class="line">    UInt8 *bufferPtr1 &#x3D; (UInt8 *)CVPixelBufferGetBaseAddressOfPlane(imageBuffer,1);</span><br><span class="line"></span><br><span class="line">    size_t width &#x3D; CVPixelBufferGetWidth(imageBuffer);</span><br><span class="line">    size_t height &#x3D; CVPixelBufferGetHeight(imageBuffer);</span><br><span class="line"></span><br><span class="line">    size_t bytesrow0 &#x3D; CVPixelBufferGetBytesPerRowOfPlane(imageBuffer,0);</span><br><span class="line">    size_t bytesrow1  &#x3D; CVPixelBufferGetBytesPerRowOfPlane(imageBuffer,1);</span><br><span class="line"></span><br><span class="line">    UInt8 *yuv420_data &#x3D; (UInt8 *)malloc(width * height *3&#x2F; 2);&#x2F;&#x2F;buffer to store YUV with layout YYYYYYYYUUVV</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#x2F;* convert NV12 data to YUV420*&#x2F;</span><br><span class="line">    UInt8 *pY &#x3D; bufferPtr ;</span><br><span class="line">    UInt8 *pUV &#x3D; bufferPtr1;</span><br><span class="line">    UInt8 *pU &#x3D; yuv420_data + width * height;</span><br><span class="line">    UInt8 *pV &#x3D; pU + width * height &#x2F; 4;</span><br><span class="line">    for(int i &#x3D; 0; i &lt; height; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        memcpy(yuv420_data + i * width, pY + i * bytesrow0, width);</span><br><span class="line">    &#125;</span><br><span class="line">    for(int j &#x3D; 0;j &lt; height&#x2F;2; j++)</span><br><span class="line">    &#123;</span><br><span class="line">        for(int i &#x3D; 0; i &lt; width&#x2F;2; i++)</span><br><span class="line">        &#123;</span><br><span class="line">            *(pU++) &#x3D; pUV[i&lt;&lt;1];</span><br><span class="line">            *(pV++) &#x3D; pUV[(i&lt;&lt;1) + 1];</span><br><span class="line">        &#125;</span><br><span class="line">        pUV +&#x3D; bytesrow1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; yuv420_data &lt;&#x3D;&#x3D;&gt; pInFrame</span><br><span class="line">    pPicIn-&gt;img.plane[0] &#x3D; yuv420_data;</span><br><span class="line">    pPicIn-&gt;img.plane[1] &#x3D; pPicIn-&gt;img.plane[0] + (int)_config.videoSize.width * (int)_config.videoSize.height;</span><br><span class="line">    pPicIn-&gt;img.plane[2] &#x3D; pPicIn-&gt;img.plane[1] + (int)(_config.videoSize.width * _config.videoSize.height &#x2F; 4);</span><br><span class="line">    pPicIn-&gt;img.i_stride[0] &#x3D; _config.videoSize.width;</span><br><span class="line">    pPicIn-&gt;img.i_stride[1] &#x3D; _config.videoSize.width &#x2F; 2;</span><br><span class="line">    pPicIn-&gt;img.i_stride[2] &#x3D; _config.videoSize.width &#x2F; 2;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 编码</span><br><span class="line">    int frame_size &#x3D; x264_encoder_encode(pX264Handle, &amp;pNals, &amp;iNal, pPicIn, pPicOut);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 将编码数据写入文件</span><br><span class="line">    if(frame_size &gt; 0) &#123;</span><br><span class="line"></span><br><span class="line">        for (int i &#x3D; 0; i &lt; iNal; ++i)</span><br><span class="line">        &#123;</span><br><span class="line">            fwrite(pNals[i].p_payload, 1, pNals[i].i_payload, pFile);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    CVPixelBufferUnlockBaseAddress(imageBuffer, 0);</span><br><span class="line">&#125;</span><br><span class="line">释放资源：</span><br><span class="line">- (void)freeX264Resource&#123;</span><br><span class="line">    &#x2F;&#x2F; 清除图像区域</span><br><span class="line">    x264_picture_clean(pPicIn);</span><br><span class="line">    &#x2F;&#x2F; 关闭编码器句柄</span><br><span class="line">    x264_encoder_close(pX264Handle);</span><br><span class="line">    pX264Handle &#x3D; NULL;</span><br><span class="line">    free(pPicIn);</span><br><span class="line">    pPicIn &#x3D; NULL;</span><br><span class="line">    free(pPicOut);</span><br><span class="line">    pPicOut &#x3D; NULL;</span><br><span class="line">    free(pX264Param);</span><br><span class="line">    pX264Param &#x3D; NULL;</span><br><span class="line">    fclose(pFile);</span><br><span class="line">    pFile &#x3D; NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码地址：<br>参考链接：<br><a href="https://www.cnblogs.com/fojian/archive/2012/09/01/2666627.html" target="_blank" rel="noopener">https://www.cnblogs.com/fojian/archive/2012/09/01/2666627.html</a><br><a href="https://web.archive.org/web/20150207075004/http://mewiki.project357.com/wiki/X264_Settings" target="_blank" rel="noopener">https://web.archive.org/web/20150207075004/http://mewiki.project357.com/wiki/X264_Settings</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E9%9F%B3%E8%A7%86%E9%A2%91/" rel="tag"># 音视频</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/02/07/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E7%A1%AC%E7%BC%96%E7%A0%81%E7%9A%84%E5%AE%9E%E7%8E%B0/" rel="next" title="iOS音视频开发-视频硬编码的实现">
+                <i class="fa fa-chevron-left"></i> iOS音视频开发-视频硬编码的实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/02/22/iOS%E9%9F%B3%E8%A7%86%E9%A2%91%E5%BC%80%E5%8F%91-%E8%A7%86%E9%A2%91%E8%BD%AF%E7%BC%96%E7%A0%81-FFmpeg-x264%E7%BC%96%E7%A0%81H264%E6%96%87%E4%BB%B6/" rel="prev" title="iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件">
+                iOS音视频开发-视频软编码-FFmpeg-x264编码H264文件 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/assets/blogImg/icon.png"
+                alt="ibabyblue" />
+            
+              <p class="site-author-name" itemprop="name">ibabyblue</p>
+              <p class="site-description motion-element" itemprop="description">一名就职于猎豹移动的iOS Coder</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ibabyblue" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:ibabyblue_z@icloud.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ibabyblue</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
