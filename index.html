@@ -251,6 +251,183 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/27/YUV%E4%B8%8ERGB%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ibabyblue">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/assets/blogImg/icon.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ibabyblue's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/04/27/YUV%E4%B8%8ERGB%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/" itemprop="url">YUV与RGB格式转换</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-04-27T20:06:07+08:00">
+                2020-04-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/" itemprop="url" rel="index">
+                    <span itemprop="name">计算机图形学</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h5 id="一、What-is-YUV？"><a href="#一、What-is-YUV？" class="headerlink" title="一、What is YUV？"></a>一、What is YUV？</h5><p>YUV是编译true-color颜色空间（color space）的种类，Y’UV, YUV, YCbCr，YPbPr等专有名词都可以称为YUV，彼此有重叠。“Y”表示明亮度（Luminance、Luma），“U”和“V”则是色度、浓度（Chrominance、Chroma），如果没有U（Cb）、V(Cr)，只有Y亮度信息，也可以显示图像，即黑白图像没有色彩而已。</p>
+<p>YUV这种彩色编码系统，主要用于视频、图形处理管线中（pipeline）。最终呈现在屏幕上的图像，都是有RGB格式呈现的，但是为什么引入YUV呢？这是因为YUV可节省带宽，YUV分为多种格式，其中YUV420P类型采样数据大小为RGB格式的一半，在直播模式下，数据传输时大小显得尤为重要。<br>直播模式下，YUV与RGB的应用：<br>1.摄像头采集视频帧，设置输出的数据格式为YUV420P。<br>2.视频帧编码<br>3.视频帧数据推流传输<br>4.视频帧数据解码<br>5.YUV420P数据转换为RGB格式，渲染。</p>
+<p>YUV采样格式：<br>1.YUV444<br>2.YUV422<br>3.YUV420</p>
+<p>YUV420：<br>1.YUV420P<br>  1).YU12格式（YYYYUUVV）<br>  2).YV12格式（YYYYVVUU）<br>  即先存储Y分量,再存储U、V分量,区别在于:YU12是先Y再U后V，而YV12是先Y再V后U。<br>3.YUV420SP<br>  1).NV12格式（YYYYUVUV）<br>  2).NV21格式（YYYYVUVU）<br>  NV12和NV21格式都属于YUV420SP类型。NV12先存Y分量,再UV进行交替存储，NV21先存Y分量,在VU交替存储。</p>
+<table>
+<thead>
+<tr>
+<th>YUV 类型</th>
+<th align="center">采样格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>YUV 420P 类型</td>
+<td align="center">YV12 格式、YU12 格式</td>
+</tr>
+<tr>
+<td>YUV 420SP 类型</td>
+<td align="center">NV12 格式、NV21 格式</td>
+</tr>
+</tbody></table>
+<p>YUV其他格式可参考:<a href="https://glumes.com/post/ffmpeg/understand-yuv-format/" target="_blank" rel="noopener">一文读懂 YUV 的采样与格式</a></p>
+<h5 id="二、YUV、RGB转换公式"><a href="#二、YUV、RGB转换公式" class="headerlink" title="二、YUV、RGB转换公式"></a>二、YUV、RGB转换公式</h5><p>YCbCr是被ITU定义在标准ITU-R BT.601（标清）、ITU-R BT.709（高清）、ITU-R BT.2020（超高清）中的一种色彩空间,是一种针对RGB所做的编码,是YUV压缩和偏移的版本,YCbCr通常用于视频和图像压缩和传输,在视频编解码中的”YUV图像”指的就是 YCbCr。<br>YCbCr和RGB的转换,不同的标准有不同的转换公式，并且需要区分Video Range和Full Range。<br>Full Range：计算机设备 PC Level（色域全面[0-255]）<br>Video Range：电视机等消费类产品 Studio Level（色域不够全面[16-235]），省略不常用的色域。<br>移动端在直播模式下通常使用Video Range（非必然）。<br>iOS CoreVideo中定义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange &#x3D; &#39;420v&#39;, </span><br><span class="line">&#x2F;* Bi-Planar Component Y&#39;CbCr 8-bit 4:2:0, video-range (luma&#x3D;[16,235] chroma&#x3D;[16,240]).  baseAddr points to a big-endian CVPlanarPixelBufferInfo_YCbCrBiPlanar struct *&#x2F;</span><br><span class="line">  </span><br><span class="line">kCVPixelFormatType_420YpCbCr8BiPlanarFullRange  &#x3D; &#39;420f&#39;, </span><br><span class="line">&#x2F;* Bi-Planar Component Y&#39;CbCr 8-bit 4:2:0, full-range (luma&#x3D;[0,255] chroma&#x3D;[1,255]).  baseAddr points to a big-endian CVPlanarPixelBufferInfo_YCbCrBiPlanar struct *&#x2F;</span><br></pre></td></tr></table></figure>
+<p>Full Range的取值范围为luma=[0,255] chroma=[1,255]，而Video Range是luma=[16,235] chroma=[16,240]。</p>
+<p>转换公式如下：<br>BT.601, which is the standard for SDTV.<br><img src="/assets/bt.601.png" alt="转换公式-标清（SD)">RGB to YUV：<br>  Y = 0.299R+0.587G+0.114B<br>  Cr = V = 0.713(R−Y)=0.500R−0.419G−0.081B<br>  Cb = U = 0.564(B−Y)=−0.169R−0.331G+0.500B</p>
+<p>YUV to RGB：<br>  R = 1.164(Y−16.0/255)+1.596(V−128.0/255)<br>  G = 1.164(Y−16.0/255)−0.813(V−128.0/255)−0.391(U−128.0/255)<br>  B = 1.164(Y−16.0/255)+2.018(U−128.0/255)<br>  即：<br>  R = 1.164Y+1.596V-0.871;<br>  G = 1.164Y-0.813V-0.391U+0.529;<br>  B = 1.164Y+2.018U-1.0729;</p>
+<p>上述RGB的取值范围是[0,1]。Y的范围是 [0,1]，Cr和Cb的范围是[−0.5,0.5]。</p>
+<p>也有转换公式是这样的：<br>RGB to YUV：<br>  Y = 0.257R+0.504G+0.098B+16<br>  Cr = V = 0.439R−0.368G−0.071B+128<br>  Cb = U = −0.148R−0.291G+0.439B+128</p>
+<p>YUV to RGB：<br>  R = 1.164(Y−16)+1.596(V−128)<br>  G = 1.164(Y−16)−0.813(V−128)−0.391(U−128)<br>  B = 1.164(Y−16)+2.018(U−128)<br>注意在上面的式子中,RGB的范围是[0,255],Y的范围是[16,235],UV的范围是[16,239],如果超出这个范围就截断处理。</p>
+<p>BT.601 full range<br><img src="/assets/fullrange.png" alt="转换公式-fullrange">RGB to YUV：<br>  Y = 0.299 * R + 0.587 * G + 0.114 * B          　　　<br>  Cr = V = -0.169 * R - 0.331 * G + 0.500 * B<br>  Cb = U = 0.500 * R - 0.439 * G - 0.081 * B  </p>
+<p>YUV to RGB：<br>  R = Y + 1.400V - 0.7<br>  G = Y - 0.343U - 0.711V + 0.526<br>  B = Y + 1.765U - 0.883<br>上述式子中RGB的范围是[0,255],Y的范围是[0,255],UV的范围是[0,255]如果超出这个范围就截断处理。</p>
+<p>BT.709, which is the standard for HDTV.<br><img src="/assets/bt.709.png" alt="转换公式-高清（HD）">RGB to YUV：<br>  Y = 0.0627  + 0.183 * R + 0.614 * g + 0.062 * b<br>  Cb = U = 0.5 - 0.101 * R - 0.339 * g + 0.439 * b<br>  Cr = V = 0.5 + 0.439 * R - 0.399 * g - 0.040 * b </p>
+<p>YUV to RGB：<br>  R = 1.164Y + 1.739V - 0.97<br>  G = 1.164Y - 0.213U - 0.533V + 0.301<br>  B = 1.164Y + 2.112U - 1.129<br>上述式子中,RGB的范围是[0,255],Y的范围是[16,235],UV的范围是[16,239],如果超出这个范围就截断处理。</p>
+<h5 id="三、常用矩阵"><a href="#三、常用矩阵" class="headerlink" title="三、常用矩阵"></a>三、常用矩阵</h5><p>常用色彩3X3矩阵定义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; BT.601, which is the standard for SDTV.</span><br><span class="line">GLfloat kColorConversion601Default[] &#x3D; &#123;</span><br><span class="line">    1.164,  1.164, 1.164,</span><br><span class="line">     0.0,  -0.392, 2.017,</span><br><span class="line">    1.596, -0.813,  0.0,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; BT.601 full range </span><br><span class="line">GLfloat kColorConversion601FullRangeDefault[] &#x3D; &#123;</span><br><span class="line">    1.0,   1.0,   1.0,</span><br><span class="line">    0.0, -0.343, 1.765,</span><br><span class="line">    1.4, -0.711,  0.0,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; BT.709, which is the standard for HDTV.</span><br><span class="line">GLfloat kColorConversion709Default[] &#x3D; &#123;</span><br><span class="line">    1.164,  1.164, 1.164,</span><br><span class="line">     0.0,  -0.213, 2.112,</span><br><span class="line">    1.793, -0.533,  0.0,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h5 id="参考链接："><a href="#参考链接：" class="headerlink" title="参考链接："></a>参考链接：</h5><p><a href="https://en.wikipedia.org/wiki/YUV" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/YUV</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/09/Cronet%E5%BA%93-iOS%E3%80%81Android%E7%BC%96%E8%AF%91/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1393,7 +1570,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1404,7 +1581,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -1415,7 +1592,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
